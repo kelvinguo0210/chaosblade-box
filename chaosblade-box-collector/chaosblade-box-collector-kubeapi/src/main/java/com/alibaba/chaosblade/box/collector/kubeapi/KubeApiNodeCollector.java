@@ -28,6 +28,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1NodeList;
 import io.kubernetes.client.util.Config;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
 /**
  * @author yefei
  */
+@Slf4j
 @Component
 @CollectorStrategy(CollectorType.KUBE_API)
 public class KubeApiNodeCollector implements NodeCollector, InitializingBean {

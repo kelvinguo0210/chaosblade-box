@@ -28,6 +28,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.util.Config;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +42,7 @@ import java.util.stream.Collectors;
 /**
  * @author yefei
  */
+@Slf4j
 @Component
 @CollectorStrategy(CollectorType.KUBE_API)
 public class KubeApiPodCollector implements PodCollector, InitializingBean {
@@ -63,16 +65,20 @@ public class KubeApiPodCollector implements PodCollector, InitializingBean {
                 ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(query.getConfig().getBytes());
                 api = new CoreV1Api(Config.fromConfig(byteArrayInputStream));
             }
+            log.info( "***" + Thread.currentThread().getName() + " | ApiPodCollector - calling api.listPodForAllNamespacesAsync... | "  );
             api.listPodForAllNamespacesAsync(null, null, null, null,
                     null, null, null, null, null,
                     new ApiCallback<V1PodList>() {
                         @Override
                         public void onFailure(ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
+                            //kguo
+                            log.info("***" + Thread.currentThread().getName() + " | ApiPodCollector - ApiCallback - onFailure | " );
                             future.completeExceptionally(e);
                         }
 
                         @Override
                         public void onSuccess(V1PodList result, int statusCode, Map<String, List<String>> responseHeaders) {
+                            log.info( "***" + Thread.currentThread().getName() + " | ApiPodCollector - ApiCallback - onSuccess | "  );
                             List<Pod> pods = result.getItems().stream()
                                     .filter(v1Pod -> Objects.equals(v1Pod.getSpec().getNodeName(), query.getNodeName()))
                                     .map(v1Pod ->

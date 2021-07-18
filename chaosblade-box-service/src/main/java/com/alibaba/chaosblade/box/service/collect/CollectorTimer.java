@@ -138,7 +138,7 @@ public class CollectorTimer implements InitializingBean {
 
                 future.handle((nodes, e) -> {
                     if (e != null) {
-                        log.error("collect node fail!", e);
+                        log.error("collect node fail!");
                         return null;
                     }
                     nodes.forEach(node -> {
@@ -189,6 +189,8 @@ public class CollectorTimer implements InitializingBean {
             try {
                 List<DeviceNodeDO> nodes = deviceNodeRepository.selectList(DeviceNodeDO.builder().build());
                 for (DeviceNodeDO node : nodes) {
+                    log.info("***" + Thread.currentThread().getName() + " | Timer - calling podCollector->collect() for node:  |" + node.getNodeName());
+                    Thread.sleep(500);
                     Query q = Query.builder().build();
                     q.setClusterId(query.getClusterId());
                     q.setConfig(query.getConfig());
@@ -200,11 +202,15 @@ public class CollectorTimer implements InitializingBean {
                     deviceMapper.update(DeviceDO.builder().lastPingTime(DateUtil.date()).build(), queryWrapper);
 
                     future.handle((pods, e) -> {
+                        //kguo
+                        log.info("***" + Thread.currentThread().getName() + " | Timer - future.handle entering... | ");
                         if (e != null) {
-                            log.error("collect pod fail!", e);
+                            log.info("***" + Thread.currentThread().getName() + " | Timer - future.handle @1 handle failure... | ");
+                            log.error("collect pod fail!");
                             return null;
                         }
                         pods.forEach(pod -> {
+                            log.info("***" + Thread.currentThread().getName() + " | Timer - future.handle @2 handle ok... | ");
                             Long deviceId = devicePodRepository.selectByNameAndNamespace(pod.getNamespace(), pod.getName())
                                     .map(DevicePodDO::getDeviceId)
                                     .orElseGet(() -> {
@@ -264,7 +270,7 @@ public class CollectorTimer implements InitializingBean {
                     CompletableFuture<List<Container>> future = collector.collect(q);
                     future.handle((containers, e) -> {
                         if (e != null) {
-                            log.error("collect container fail!", e);
+                            log.error("collect container fail!");
                             return null;
                         }
                         List<ContainerBO> list = containers.stream().map(container ->
